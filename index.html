@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Éolien Offshore Flottant — Cartographie des Acteurs</title>
+
+  <!-- Leaflet.js CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Extension pour recupérer les données sur le fichier excel directement -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <!-- Google Fonts — typographie industrielle/navale -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       VARIABLES & RESET
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg-deep:       #0b1520;
+      --bg-panel:      #111e2e;
+      --bg-card:       #162033;
+      --border:        #1e3352;
+      --border-light:  #2a4a6e;
+      --accent:        #00c4ff;
+      --accent-glow:   rgba(0, 196, 255, 0.18);
+      --text-primary:  #e8f4ff;
+      --text-secondary:#7fa8cc;
+      --text-dim:      #4a7090;
+      --panel-w:       320px;
+
+      /* Palette des 10 rôles */
+      --c0: #00c4ff;  /* Développeur/opérateur */
+      --c1: #ff6b35;  /* Concepteur flotteur & R&D */
+      --c2: #ffd166;  /* Turbinier */
+      --c3: #06d6a0;  /* Chaudronnerie */
+      --c4: #a78bfa;  /* Usineur */
+      --c5: #f472b6;  /* Logistique & service maritime */
+      --c6: #34d399;  /* Sous-stations élec. & maintenance */
+      --c7: #fb923c;  /* Construction & Réparation Navale */
+      --c8: #94a3b8;  /* Producteur d'acier */
+      --c9: #e2e8f0;  /* Autres */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════
+       PANNEAU LATÉRAL
+    ═══════════════════════════════════════════════ */
+    #sidebar {
+      width: var(--panel-w);
+      min-width: var(--panel-w);
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    /* En-tête */
+    #sidebar-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-deep);
+    }
+    #sidebar-header .eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    #sidebar-header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text-primary);
+    }
+    #sidebar-header .subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      font-weight: 300;
+    }
+
+    /* Compteur acteurs */
+    #actor-count-bar {
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    #actor-count-bar .count {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    /* Scrollable */
+    #sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+    #sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    #sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+    #sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+    /* Section titre */
+    .section-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    /* Bouton reset */
+    #reset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-family: 'Barlow', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    #reset-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* Filtres */
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background .15s;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+    .filter-item:hover { background: var(--bg-card); }
+    .filter-item.active {
+      background: var(--bg-card);
+      border-color: var(--border-light);
+    }
+
+    /* Pastille couleur + icône */
+    .filter-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    .filter-label {
+      font-size: 12.5px;
+      font-weight: 400;
+      color: var(--text-primary);
+      flex: 1;
+      line-height: 1.3;
+    }
+    .filter-item:not(.active) .filter-label { color: var(--text-secondary); }
+
+    .filter-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      min-width: 20px;
+      text-align: right;
+    }
+
+    /* Checkbox custom */
+    .filter-check {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 3px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+    }
+    .filter-item.active .filter-check {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .filter-item.active .filter-check::after {
+      content: '';
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid #000;
+      border-bottom: 2px solid #000;
+      transform: rotate(-45deg) translate(0, -1px);
+      display: block;
+    }
+
+    /* Séparateur */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+    }
+
+    /* Légende types */
+    .legend-section { margin-top: 4px; }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .legend-icon { flex-shrink: 0; }
+
+    /* Footer */
+    #sidebar-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 10.5px;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════════
+       CARTE
+    ═══════════════════════════════════════════════ */
+    #map {
+      flex: 1;
+      z-index: 1;
+    }
+
+    /* Surcharge Leaflet */
+    .leaflet-container {
+      font-family: 'Barlow', sans-serif !important;
+      background: #0a1525 !important;
+    }
+    .leaflet-control-zoom a {
+      background: var(--bg-panel) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border) !important;
+    }
+    .leaflet-control-zoom a:hover {
+      background: var(--bg-card) !important;
+      color: var(--accent) !important;
+    }
+    .leaflet-control-attribution {
+      background: rgba(11, 21, 32, 0.85) !important;
+      color: var(--text-dim) !important;
+      font-size: 9px !important;
+    }
+    .leaflet-control-attribution a { color: var(--text-dim) !important; }
+
+    /* Popup custom */
+    .leaflet-popup-content-wrapper {
+      background: var(--bg-panel) !important;
+      border: 1px solid var(--border-light) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6) !important;
+      padding: 0 !important;
+    }
+    .leaflet-popup-content {
+      margin: 0 !important;
+      min-width: 240px;
+    }
+    .leaflet-popup-tip { background: var(--bg-panel) !important; }
+    .leaflet-popup-close-button {
+      color: var(--text-dim) !important;
+      font-size: 18px !important;
+      top: 8px !important;
+      right: 10px !important;
+    }
+
+    /* Contenu popup */
+    .popup-inner { padding: 16px; }
+    .popup-country {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .popup-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 2px;
+      padding-right: 20px;
+    }
+    .popup-city {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .popup-roles-title {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .popup-role-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px 4px 6px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 500;
+      margin: 0 4px 5px 0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-primary);
+    }
+    .popup-role-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Marqueur SVG hover */
+    .actor-marker { cursor: pointer; }
+    .actor-marker:hover svg { filter: drop-shadow(0 0 8px rgba(0,196,255,.7)); }
+
+    /* Toast info */
+    #map-hint {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 900;
+      background: rgba(11,21,32,.85);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      pointer-events: none;
+      transition: opacity .5s;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ PANNEAU LATÉRAL ═══════════════════════════════ -->
+<aside id="sidebar">
+
+  <div id="sidebar-header">
+    <div class="eyebrow">Cartographie industrielle</div>
+    <h1>Éolien Offshore<br>Flottant</h1>
+    <div class="subtitle">Acteurs & chaîne de valeur</div>
+  </div>
+
+  <div id="actor-count-bar">
+    <span class="count" id="visible-count">—</span>
+    <span>acteurs affichés</span>
+  </div>
+
+  <div id="sidebar-scroll">
+
+    <!-- Filtres par rôle -->
+    <div class="section-label">Filtrer par rôle</div>
+
+    <button id="reset-btn" title="Réinitialiser tous les filtres">
+      ↺ Tout afficher
+    </button>
+
+    <div id="filter-list">
+      <!-- Généré dynamiquement en JS -->
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Légende visuelle -->
+    <div class="section-label">Légende des marqueurs</div>
+    <div class="legend-section">
+      <div class="legend-row">
+        <svg class="legend-icon" width="28" height="28" viewBox="0 0 28 28">
+          <circle cx="14" cy="14" r="12" fill="#00c4ff" />
+        </svg>
+        <span>Acteur mono-catégorie (cercle plein)</span>
+      </div>
+      <div class="legend-row">
+        <svg class="legend-icon" width="28" height="28" viewBox="0 0 28 28">
+          <!-- Mini pie example: 2 couleurs -->
+          <g transform="translate(14,14)">
+            <path d="M0,0 L12,0 A12,12,0,0,1,-6,10.39 Z" fill="#00c4ff"/>
+            <path d="M0,0 L-6,10.39 A12,12,0,0,1,-6,-10.39 Z" fill="#ff6b35"/>
+            <path d="M0,0 L-6,-10.39 A12,12,0,0,1,12,0 Z" fill="#ffd166"/>
+          </g>
+          <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+        </svg>
+        <span>Acteur multi-catégories (camembert)</span>
+      </div>
+      <div class="legend-row">
+        <svg class="legend-icon" width="28" height="28" viewBox="0 0 28 28">
+          <circle cx="14" cy="14" r="12" fill="#162033" stroke="#2a4a6e" stroke-width="1.5"/>
+          <text x="14" y="18" text-anchor="middle" fill="#7fa8cc" font-size="10" font-family="Barlow Condensed" font-weight="700">3×</text>
+        </svg>
+        <span>Acteurs empilés (même position)</span>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Info multi-sélection -->
+    <div class="section-label">Mode de filtrage</div>
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+      Sélectionner <strong style="color:var(--text-primary)">plusieurs rôles</strong> affiche les acteurs appartenant à <em>au moins un</em> des rôles cochés (union logique).
+    </div>
+
+  </div><!-- /sidebar-scroll -->
+
+  <div id="sidebar-footer">
+    Éolien Offshore Flottant · Données illustratives<br>
+    Cliquer sur un marqueur pour les détails
+  </div>
+
+</aside>
+
+<!-- ═══════════════════════════════ CARTE ═══════════════════════════════ -->
+<div id="map"></div>
+<div id="map-hint">🖱 Cliquez sur un marqueur pour afficher les détails</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   DONNÉES — acteurs de l'éolien offshore flottant
+═══════════════════════════════════════════════════════════════════════ */
+// 1. Remplace par TON URL de publication CSV Google Sheets
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pub?gid=1916762907&single=true&output=csv';
+
+
+let ACTORS = []; // Deviendra une variable globale remplie par le CSV
+
+// 2. Fonction pour charger les données
+async function loadDataFromSheet() {
+  try {
+    const response = await fetch(SHEET_CSV_URL);
+    const csvText = await response.text();
+    
+    // Utilisation de PapaParse pour convertir le CSV en JSON
+    Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        // Transformation des données pour coller à ton format
+        ACTORS = results.data.map(row => ({
+          nom: row.nom,
+          pays: row.pays,
+          ville: row.ville,
+          lat: parseFloat(row.lat.replace(',', '.')), // Gère les virgules françaises
+          lng: parseFloat(row.lng.replace(',', '.')),
+          // Transforme la chaîne "Role 1, Role 2" en tableau [ "Role 1", "Role 2" ]
+          roles: row.roles ? row.roles.split(',').map(r => r.trim()) : []
+        }));
+
+        // Une fois les données prêtes, on lance l'affichage
+        initApp();
+      }
+    });
+  } catch (error) {
+    console.error("Erreur de chargement du Sheet :", error);
+  }
+}
+
+// 3. Fonction d'initialisation (regroupe tes fonctions existantes)
+function initApp() {
+  buildFilters();
+  renderMarkers();
+}
+
+// 4. Lancer le chargement au démarrage
+loadDataFromSheet();
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONFIGURATION DES RÔLES (ordre, couleur, libellé)
+═══════════════════════════════════════════════════════════════════════ */
+const ROLES = [
+  { key: "Port",                               color: "#e0f2fe" },
+  { key: "Développeur/opérateur",              color: "#00c4ff" },
+  { key: "Concepteur flotteur et R&D",         color: "#ff6b35" },
+  { key: "Turbinier",                          color: "#ffd166" },
+  { key: "Chaudronnerie",                      color: "#06d6a0" },
+  { key: "Usineur",                            color: "#a78bfa" },
+  { key: "Logistique & service maritime",      color: "#f472b6" },
+  { key: "Sous-stations élec. & maintenance",  color: "#34d399" },
+  { key: "Construction & Réparation Navale",   color: "#fb923c" },
+  { key: "Producteur d'acier",                 color: "#94a3b8" },
+  { key: "Autres",                             color: "#e2e8f0" },
+];
+
+/* Map rapide key → couleur */
+const ROLE_COLOR = {};
+ROLES.forEach(r => ROLE_COLOR[r.key] = r.color);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ÉTAT DE L'APPLICATION
+═══════════════════════════════════════════════════════════════════════ */
+let activeFilters = new Set(); // vide = tout afficher
+let markers = [];              // { actor, leafletMarker }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   INITIALISATION DE LA CARTE LEAFLET
+═══════════════════════════════════════════════════════════════════════ */
+const map = L.map('map', {
+  center: [43, -3],
+  zoom: 5,
+  zoomControl: true,
+  attributionControl: true,
+});
+
+// Tuiles OpenStreetMap — thème sombre via CartoDB Dark Matter
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GÉNÉRATION SVG DU MARQUEUR (camembert ou cercle plein)
+═══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Convertit des degrés polaires en coordonnées cartésiennes
+ * autour du centre (cx, cy) avec rayon r.
+ */
+function polarToXY(angleDeg, r, cx, cy) {
+  const rad = (angleDeg - 90) * (Math.PI / 180);
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+/**
+ * Génère le SVG du marqueur.
+ * @param {string[]} roles   - rôles de l'acteur
+ * @param {number}   size    - diamètre total du SVG (pixels)
+ * @param {boolean}  stacked - true si cet emplacement a plusieurs acteurs
+ * @param {number}   stackN  - nombre d'acteurs empilés (si stacked)
+ */
+function buildMarkerSVG(roles, size, stacked, stackN) {
+  const r = size / 2 - 2;          // rayon du camembert
+  const cx = size / 2;
+  const cy = size / 2;
+  const strokeW = 1.5;
+
+  let piePaths = '';
+
+  if (roles.length === 1) {
+    // Cercle plein
+    piePaths = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${ROLE_COLOR[roles[0]] || '#7fa8cc'}" />`;
+  } else {
+    // Camembert : une tranche par rôle, proportions égales
+    const slice = 360 / roles.length;
+    roles.forEach((role, i) => {
+      const startAngle = i * slice;
+      const endAngle   = (i + 1) * slice;
+      const start = polarToXY(startAngle, r, cx, cy);
+      const end   = polarToXY(endAngle,   r, cx, cy);
+      const largeArc = slice > 180 ? 1 : 0;
+      const color = ROLE_COLOR[role] || '#7fa8cc';
+      piePaths += `
+        <path d="M${cx},${cy} L${start.x},${start.y} A${r},${r},0,${largeArc},1,${end.x},${end.y} Z"
+              fill="${color}" />`;
+    });
+  }
+
+  // Anneau de bordure
+  const border = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+    stroke="rgba(255,255,255,0.2)" stroke-width="${strokeW}" />`;
+
+  // Badge "×N" si empilé
+  let badge = '';
+  if (stacked && stackN > 1) {
+    const bx = size - 6;
+    const by = 6;
+    badge = `
+      <circle cx="${bx}" cy="${by}" r="8" fill="#0b1520" stroke="#2a4a6e" stroke-width="1"/>
+      <text x="${bx}" y="${by+3.5}" text-anchor="middle"
+            fill="#7fa8cc" font-size="7" font-family="Barlow Condensed" font-weight="700">×${stackN}</text>`;
+  }
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <g filter="url(#glow)">
+        ${piePaths}
+        ${border}
+        ${badge}
+      </g>
+    </svg>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GÉNÉRATION DU CONTENU POPUP
+═══════════════════════════════════════════════════════════════════════ */
+function buildPopupHTML(actor) {
+  const tags = actor.roles.map(role => {
+    const color = ROLE_COLOR[role] || '#7fa8cc';
+    return `<span class="popup-role-tag">
+      <span class="popup-role-dot" style="background:${color};box-shadow:0 0 6px ${color}88"></span>
+      ${role}
+    </span>`;
+  }).join('');
+
+  return `
+    <div class="popup-inner">
+      <div class="popup-country">${actor.pays}</div>
+      <div class="popup-name">${actor.nom}</div>
+      <div class="popup-city">📍 ${actor.ville}</div>
+      <div class="popup-roles-title">Rôles (${actor.roles.length})</div>
+      <div>${tags}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GROUPE D'ACTEURS PAR POSITION (pour gérer les superpositions)
+═══════════════════════════════════════════════════════════════════════ */
+function groupByPosition(actors) {
+  const groups = {};
+  actors.forEach(actor => {
+    // Clé arrondie pour regrouper les positions très proches
+    const key = `${actor.lat.toFixed(2)}_${actor.lng.toFixed(2)}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(actor);
+  });
+  return groups;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PLACEMENT DES MARQUEURS SUR LA CARTE
+═══════════════════════════════════════════════════════════════════════ */
+const markerLayer = L.layerGroup().addTo(map);
+
+function renderMarkers() {
+  // Nettoyer l'ancienne couche
+  markerLayer.clearLayers();
+  markers = [];
+
+  // Filtrer les acteurs selon les rôles actifs
+  const filtered = activeFilters.size === 0
+    ? ACTORS
+    : ACTORS.filter(a => a.roles.some(r => activeFilters.has(r)));
+
+  // Mettre à jour le compteur
+  document.getElementById('visible-count').textContent = filtered.length;
+
+  // Grouper par position géographique
+  const groups = groupByPosition(filtered);
+
+  Object.values(groups).forEach(group => {
+    const stackN = group.length;
+
+    group.forEach((actor, idx) => {
+      const SIZE = 32;
+      const offset = stackN > 1 ? (idx - (stackN - 1) / 2) * 18 : 0;
+
+      // Décaler légèrement les marqueurs empilés
+      const lat = actor.lat + (stackN > 1 ? idx * 0.004 - (stackN - 1) * 0.002 : 0);
+      const lng = actor.lng;
+
+      const svg = buildMarkerSVG(actor.roles, SIZE, stackN > 1, stackN);
+      const icon = L.divIcon({
+        className: 'actor-marker',
+        html: svg,
+        iconSize:   [SIZE, SIZE],
+        iconAnchor: [SIZE / 2, SIZE / 2],
+        popupAnchor:[0, -SIZE / 2 - 2],
+      });
+
+      const marker = L.marker([lat, lng], { icon })
+        .addTo(markerLayer)
+        .bindPopup(buildPopupHTML(actor), {
+          maxWidth: 320,
+          className: 'custom-popup',
+        });
+
+      markers.push({ actor, marker });
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONSTRUCTION DES FILTRES DANS LE PANNEAU LATÉRAL
+═══════════════════════════════════════════════════════════════════════ */
+function buildFilters() {
+  const container = document.getElementById('filter-list');
+  container.innerHTML = '';
+
+  ROLES.forEach(role => {
+    // Compter les acteurs ayant ce rôle
+    const count = ACTORS.filter(a => a.roles.includes(role.key)).length;
+    if (count === 0) return; // Ne pas afficher les rôles sans acteur
+
+    const item = document.createElement('div');
+    item.className = 'filter-item';
+    item.dataset.role = role.key;
+
+    item.innerHTML = `
+      <span class="filter-dot" style="background:${role.color};box-shadow:0 0 6px ${role.color}88;color:${role.color}"></span>
+      <span class="filter-label">${role.key}</span>
+      <span class="filter-badge">${count}</span>
+      <span class="filter-check"></span>`;
+
+    item.addEventListener('click', () => toggleFilter(role.key, item));
+    container.appendChild(item);
+  });
+}
+
+function toggleFilter(roleKey, el) {
+  if (activeFilters.has(roleKey)) {
+    activeFilters.delete(roleKey);
+    el.classList.remove('active');
+  } else {
+    activeFilters.add(roleKey);
+    el.classList.add('active');
+  }
+  renderMarkers();
+}
+
+/* Reset */
+document.getElementById('reset-btn').addEventListener('click', () => {
+  activeFilters.clear();
+  document.querySelectorAll('.filter-item').forEach(el => el.classList.remove('active'));
+  renderMarkers();
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MASQUER LE HINT APRÈS 4 SECONDES
+═══════════════════════════════════════════════════════════════════════ */
+setTimeout(() => {
+  const hint = document.getElementById('map-hint');
+  if (hint) hint.style.opacity = '0';
+}, 4000);
+
+map.on('click', () => {
+  const hint = document.getElementById('map-hint');
+  if (hint) hint.style.opacity = '0';
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DÉMARRAGE
+═══════════════════════════════════════════════════════════════════════ */
+buildFilters();
+renderMarkers();
+
+</script>
+</body>
+</html>
