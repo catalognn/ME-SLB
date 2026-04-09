@@ -447,16 +447,14 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   LIENS DE VOS FICHIERS (À MODIFIER ICI)
+   LIENS DE VOS FICHIERS
 ═══════════════════════════════════════════════════════════════════════ */
-// 1. Remplacez ce lien par le lien CSV Google Sheets de votre onglet "[Ne pas ouvrir] Données - Carte Dynamique"
 const SHEET_ACTEURS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pub?gid=1916762907&single=true&output=csv';
 
-// 2. Remplacez ce lien par le lien CSV Google Sheets de votre onglet "[Ne pas ouvrir] Données - Carte Dynamique Projets"
-const SHEET_PROJETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pubhtml?gid=760107971&single=true';
+// 👇 REMPLACEZ CECI PAR LE LIEN DE L'ONGLET DES PROJETS 👇
+const SHEET_PROJETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pubhtml?gid=760107971&single=true'; 
 
-let ACTORS = []; 
-let PROJECTS = [];
+let ACTORS = []; // La liste unique qui contiendra absolument tout
 
 /* ═══════════════════════════════════════════════════════════════════════
    RÉCUPÉRATION ET TRAITEMENT DES DEUX FICHIERS
@@ -471,40 +469,43 @@ async function loadDataFromSheet() {
     const csvActeurs = await responseActeurs.text();
     const csvProjets = await responseProjets.text();
     
-    // Traitement indépendant pour le fichier des ACTEURS
+    // 1. Lecture du fichier des ACTEURS
     Papa.parse(csvActeurs, {
       header: true, skipEmptyLines: true,
       complete: function(results) {
-        ACTORS = results.data.map(row => ({
-          nom: row.nom || row['Nom de l\'entreprise'] || row['Nom du port'] || "",
+        const parsedActors = results.data.map(row => ({
+          nom: row.nom || row["Nom de l'entreprise"] || row["Nom du port"] || "",
           pays: row.pays || row.Pays || "",
-          ville: row.ville || row.Ville || "",
+          ville: row.ville || row.Ville || row.Port || "",
           lat: parseFloat((row.lat || row.Latitude || "").toString().replace(',', '.')), 
           lng: parseFloat((row.lng || row.Longitude || "").toString().replace(',', '.')),
-          roles: row.roles ? row.roles.split(',').map(r => r.trim()) : []
-        })).filter(a => !isNaN(a.lat) && !isNaN(a.lng)); // Filtre de sécurité
+          roles: row.roles ? row.roles.split(',').map(r => r.trim()) : [],
+          isProject: false
+        })).filter(a => !isNaN(a.lat) && !isNaN(a.lng));
+        
+        ACTORS = ACTORS.concat(parsedActors); // On ajoute les acteurs à la liste globale
       }
     });
 
-    // Traitement indépendant pour le fichier des PROJETS
+    // 2. Lecture du fichier des PROJETS
     Papa.parse(csvProjets, {
       header: true, skipEmptyLines: true,
       complete: function(results) {
-        PROJECTS = results.data.map(row => ({
+        const parsedProjects = results.data.map(row => ({
           nom: row.nom || row.Nom || "", 
           pays: row.pays || row.Pays || "",
-          ville: row.zone || row['zone'] || "En mer", // On utilise la "zone" pour l'affichage
+          ville: row.zone || "En mer", // On utilise la zone à la place de la ville
           lat: parseFloat((row.lat || row.Latitude || "").toString().replace(',', '.')),
           lng: parseFloat((row.lng || row.Longitude || "").toString().replace(',', '.')),
-          roles: ["projet"], // On force le rôle pour la classification
-          
-          // Récupération exclusive des colonnes projet
+          roles: ["Projet"], // 👈 C'est ce qui permet au filtre de fonctionner !
           statut: row.statut || row.Statut || "",
-        })).filter(p => !isNaN(p.lat) && !isNaN(p.lng)); // Exclut les projets sans coordonnées (annulés)
+          isProject: true // Étiquette pour identifier le type et gérer le statut dans l'infobulle
+        })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+        
+        ACTORS = ACTORS.concat(parsedProjects); // On ajoute les projets à la liste globale
       }
     });
 
-    // Une fois les deux fichiers chargés et nettoyés, on initialise
     initApp();
   } catch (error) {
     console.error("Erreur de chargement des Sheets :", error);
@@ -533,7 +534,7 @@ const ROLES = [
   { key: "Construction & Réparation Navale",   color: "#fb923c" },
   { key: "Producteur d'acier",                 color: "#94a3b8" },
   { key: "Autres",                             color: "#e2e8f0" },
-  { key: "Projet",                             color: "#E74C3C" } 
+  { key: "Projet",                             color: "#E74C3C" } // Le rôle des projets
 ];
 
 const ROLE_COLOR = {};
@@ -546,7 +547,7 @@ let markers = [];
    INITIALISATION DE LA CARTE LEAFLET
 ═══════════════════════════════════════════════════════════════════════ */
 const map = L.map('map', {
-  center: [43, -3],
+  center: [45.5, -1.5],
   zoom: 5,
   zoomControl: true,
   attributionControl: true,
@@ -634,16 +635,14 @@ function buildPopupHTML(actor) {
       <div class="popup-city">📍 ${actor.ville || 'En mer'}</div>
       <hr style="border:0; border-top:1px solid var(--border-light); margin-bottom:12px;">`;
 
-  // LOGIQUE SPÉCIFIQUE SI C'EST UN PROJET
-  if (actor.roles && actor.roles.includes("Projet")) {
+  // INFOBULLE PROJET : Affiche le statut
+  if (actor.isProject) {
     html += `
       <div style="font-size:12.5px; line-height:1.6; color:var(--text-secondary);">
         <div><b style="color:var(--text-primary);">État actuel :</b> <span style="color: #E74C3C; font-weight: bold;">${actor.statut || 'Non renseigné'}</span></div>
       </div>`;
-    
   } 
-
-  // LOGIQUE POUR LES PORTS ET ACTEURS
+  // INFOBULLE ACTEURS/PORTS : Affiche les pastilles métiers
   else {
     html += `<div class="popup-roles-title">Rôles de l'acteur</div><div>`;
     actor.roles.forEach(r => {
@@ -665,7 +664,6 @@ const markerLayer = L.layerGroup().addTo(map);
 function groupByPosition(actorsList) {
   const groups = {};
   actorsList.forEach(a => {
-    if (isNaN(a.lat) || isNaN(a.lng)) return; 
     const key = a.lat.toFixed(4) + '_' + a.lng.toFixed(4);
     if (!groups[key]) groups[key] = [];
     groups[key].push(a);
@@ -677,22 +675,14 @@ function renderMarkers() {
   markerLayer.clearLayers();
   markers = [];
 
-  // Filtrage indépendant des Acteurs
-  const filteredActors = activeFilters.size === 0
+  // Filtrage unique global (gère acteurs ET projets d'un coup)
+  const filtered = activeFilters.size === 0
     ? ACTORS
     : ACTORS.filter(a => a.roles.some(r => activeFilters.has(r)));
 
-  // Filtrage indépendant des Projets
-  const filteredProjects = (activeFilters.size === 0 || activeFilters.has("Projet"))
-    ? PROJECTS
-    : [];
+  document.getElementById('visible-count').textContent = filtered.length;
 
-  // On combine les deux uniquement pour le dessin sur la carte
-  const elementsToRender = [...filteredActors, ...filteredProjects];
-
-  document.getElementById('visible-count').textContent = elementsToRender.length;
-
-  const groups = groupByPosition(elementsToRender);
+  const groups = groupByPosition(filtered);
 
   Object.values(groups).forEach(group => {
     const stackN = group.length;
@@ -732,14 +722,8 @@ function buildFilters() {
   container.innerHTML = '';
 
   ROLES.forEach(role => {
-    // Comptage adapté selon la source
-    let count = 0;
-    if (role.key === "Projet") {
-      count = PROJECTS.length;
-    } else {
-      count = ACTORS.filter(a => a.roles.includes(role.key)).length;
-    }
-
+    // Le comptage est maintenant universel pour tous
+    const count = ACTORS.filter(a => a.roles.includes(role.key)).length;
     if (count === 0) return; 
 
     const item = document.createElement('div');
