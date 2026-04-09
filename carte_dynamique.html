@@ -33,18 +33,6 @@
       --text-secondary:#7fa8cc;
       --text-dim:      #4a7090;
       --panel-w:       320px;
-
-      /* Palette des 10 rôles */
-      --c0: #00c4ff;  /* Développeur/opérateur */
-      --c1: #ff6b35;  /* Concepteur flotteur & R&D */
-      --c2: #ffd166;  /* Turbinier */
-      --c3: #06d6a0;  /* Chaudronnerie */
-      --c4: #a78bfa;  /* Usineur */
-      --c5: #f472b6;  /* Logistique & service maritime */
-      --c6: #34d399;  /* Sous-stations élec. & maintenance */
-      --c7: #fb923c;  /* Construction & Réparation Navale */
-      --c8: #94a3b8;  /* Producteur d'acier */
-      --c9: #e2e8f0;  /* Autres */
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -72,7 +60,6 @@
       overflow: hidden;
     }
 
-    /* En-tête */
     #sidebar-header {
       padding: 20px 20px 16px;
       border-bottom: 1px solid var(--border);
@@ -101,7 +88,6 @@
       font-weight: 300;
     }
 
-    /* Compteur acteurs */
     #actor-count-bar {
       padding: 10px 20px;
       background: var(--bg-card);
@@ -120,7 +106,6 @@
       line-height: 1;
     }
 
-    /* Scrollable */
     #sidebar-scroll {
       flex: 1;
       overflow-y: auto;
@@ -130,7 +115,6 @@
     #sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
     #sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
 
-    /* Section titre */
     .section-label {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 10px;
@@ -141,7 +125,6 @@
       margin-bottom: 10px;
     }
 
-    /* Bouton reset */
     #reset-btn {
       display: inline-flex;
       align-items: center;
@@ -163,7 +146,6 @@
       background: var(--accent-glow);
     }
 
-    /* Filtres */
     .filter-item {
       display: flex;
       align-items: center;
@@ -182,7 +164,6 @@
       border-color: var(--border-light);
     }
 
-    /* Pastille couleur + icône */
     .filter-dot {
       width: 14px;
       height: 14px;
@@ -209,7 +190,6 @@
       text-align: right;
     }
 
-    /* Checkbox custom */
     .filter-check {
       width: 14px;
       height: 14px;
@@ -235,14 +215,12 @@
       display: block;
     }
 
-    /* Séparateur */
     .divider {
       border: none;
       border-top: 1px solid var(--border);
       margin: 16px 0;
     }
 
-    /* Légende types */
     .legend-section { margin-top: 4px; }
     .legend-row {
       display: flex;
@@ -254,7 +232,6 @@
     }
     .legend-icon { flex-shrink: 0; }
 
-    /* Footer */
     #sidebar-footer {
       padding: 12px 20px;
       border-top: 1px solid var(--border);
@@ -265,14 +242,13 @@
     }
 
     /* ═══════════════════════════════════════════════
-       CARTE
+       CARTE & POPUPS
     ═══════════════════════════════════════════════ */
     #map {
       flex: 1;
       z-index: 1;
     }
 
-    /* Surcharge Leaflet */
     .leaflet-container {
       font-family: 'Barlow', sans-serif !important;
       background: #0a1525 !important;
@@ -293,7 +269,6 @@
     }
     .leaflet-control-attribution a { color: var(--text-dim) !important; }
 
-    /* Popup custom */
     .leaflet-popup-content-wrapper {
       background: var(--bg-panel) !important;
       border: 1px solid var(--border-light) !important;
@@ -313,7 +288,6 @@
       right: 10px !important;
     }
 
-    /* Contenu popup */
     .popup-inner { padding: 16px; }
     .popup-country {
       font-family: 'Barlow Condensed', sans-serif;
@@ -364,11 +338,9 @@
       flex-shrink: 0;
     }
 
-    /* Marqueur SVG hover */
     .actor-marker { cursor: pointer; }
     .actor-marker:hover svg { filter: drop-shadow(0 0 8px rgba(0,196,255,.7)); }
 
-    /* Toast info */
     #map-hint {
       position: absolute;
       bottom: 24px;
@@ -399,7 +371,7 @@
 
   <div id="actor-count-bar">
     <span class="count" id="visible-count">—</span>
-    <span>acteurs affichés</span>
+    <span>éléments affichés</span>
   </div>
 
   <div id="sidebar-scroll">
@@ -428,7 +400,6 @@
       </div>
       <div class="legend-row">
         <svg class="legend-icon" width="28" height="28" viewBox="0 0 28 28">
-          <!-- Mini pie example: 2 couleurs -->
           <g transform="translate(14,14)">
             <path d="M0,0 L12,0 A12,12,0,0,1,-6,10.39 Z" fill="#00c4ff"/>
             <path d="M0,0 L-6,10.39 A12,12,0,0,1,-6,-10.39 Z" fill="#ff6b35"/>
@@ -437,6 +408,13 @@
           <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
         </svg>
         <span>Acteur multi-catégories (camembert)</span>
+      </div>
+      <div class="legend-row">
+        <svg class="legend-icon" width="28" height="28" viewBox="0 0 28 28">
+          <circle cx="14" cy="14" r="12" fill="none" stroke="#E74C3C" stroke-width="2" stroke-dasharray="3,2"/>
+          <circle cx="14" cy="14" r="8" fill="#E74C3C" />
+        </svg>
+        <span>Projet éolien (cercle distinct)</span>
       </div>
       <div class="legend-row">
         <svg class="legend-icon" width="28" height="28" viewBox="0 0 28 28">
@@ -449,13 +427,12 @@
 
     <hr class="divider" />
 
-    <!-- Info multi-sélection -->
     <div class="section-label">Mode de filtrage</div>
     <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
       Sélectionner <strong style="color:var(--text-primary)">plusieurs rôles</strong> affiche les acteurs appartenant à <em>au moins un</em> des rôles cochés (union logique).
     </div>
 
-  </div><!-- /sidebar-scroll -->
+  </div>
 
   <div id="sidebar-footer">
     Éolien Offshore Flottant · Données illustratives<br>
@@ -470,56 +447,83 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   DONNÉES — acteurs de l'éolien offshore flottant
+   LIENS DE VOS FICHIERS (À MODIFIER ICI)
 ═══════════════════════════════════════════════════════════════════════ */
-// 1. Remplace par TON URL de publication CSV Google Sheets
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pub?gid=1916762907&single=true&output=csv';
+// 1. Remplacez ce lien par le lien CSV Google Sheets de votre onglet "[Ne pas ouvrir] Données - Carte Dynamique"
+const SHEET_ACTEURS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pub?gid=1916762907&single=true&output=csv';
 
+// 2. Remplacez ce lien par le lien CSV Google Sheets de votre onglet "[Ne pas ouvrir] Données - Carte Dynamique Projets"
+const SHEET_PROJETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSu7a08mmLoRW5ZeAp2Q-tqo4q8H3CmdafyldIRgOfE4lKmpmqyBH9JnwF9GH5-U3Hy786eH2n2nk2R/pubhtml?gid=760107971&single=true';
 
-let ACTORS = []; // Deviendra une variable globale remplie par le CSV
+let ACTORS = []; 
+let PROJECTS = [];
 
-// 2. Fonction pour charger les données
+/* ═══════════════════════════════════════════════════════════════════════
+   RÉCUPÉRATION ET TRAITEMENT DES DEUX FICHIERS
+═══════════════════════════════════════════════════════════════════════ */
 async function loadDataFromSheet() {
   try {
-    const response = await fetch(SHEET_CSV_URL);
-    const csvText = await response.text();
-    
-    // Utilisation de PapaParse pour convertir le CSV en JSON
-    Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
-        // Transformation des données pour coller à ton format
-        ACTORS = results.data.map(row => ({
-          nom: row.nom,
-          pays: row.pays,
-          ville: row.ville,
-          lat: parseFloat(row.lat.replace(',', '.')), // Gère les virgules françaises
-          lng: parseFloat(row.lng.replace(',', '.')),
-          // Transforme la chaîne "Role 1, Role 2" en tableau [ "Role 1", "Role 2" ]
-          roles: row.roles ? row.roles.split(',').map(r => r.trim()) : []
-        }));
+    const [responseActeurs, responseProjets] = await Promise.all([
+      fetch(SHEET_ACTEURS_URL),
+      fetch(SHEET_PROJETS_URL)
+    ]);
 
-        // Une fois les données prêtes, on lance l'affichage
-        initApp();
+    const csvActeurs = await responseActeurs.text();
+    const csvProjets = await responseProjets.text();
+    
+    // Traitement indépendant pour le fichier des ACTEURS
+    Papa.parse(csvActeurs, {
+      header: true, skipEmptyLines: true,
+      complete: function(results) {
+        ACTORS = results.data.map(row => ({
+          nom: row.nom || row['Nom de l\'entreprise'] || row['Nom du port'] || "",
+          pays: row.pays || row.Pays || "",
+          ville: row.ville || row.Ville || "",
+          lat: parseFloat((row.lat || row.Latitude || "").toString().replace(',', '.')), 
+          lng: parseFloat((row.lng || row.Longitude || "").toString().replace(',', '.')),
+          roles: row.roles ? row.roles.split(',').map(r => r.trim()) : []
+        })).filter(a => !isNaN(a.lat) && !isNaN(a.lng)); // Filtre de sécurité
       }
     });
+
+    // Traitement indépendant pour le fichier des PROJETS
+    Papa.parse(csvProjets, {
+      header: true, skipEmptyLines: true,
+      complete: function(results) {
+        PROJECTS = results.data.map(row => ({
+          nom: row.nom || row.Nom || "", 
+          pays: row.pays || row.Pays || "",
+          ville: row.zone || row['Zone/Facade maritime'] || "En mer", // On utilise la "zone" pour l'affichage
+          lat: parseFloat((row.lat || row.Latitude || "").toString().replace(',', '.')),
+          lng: parseFloat((row.lng || row.Longitude || "").toString().replace(',', '.')),
+          roles: ["Projet"], // On force le rôle pour la classification
+          
+          // Récupération exclusive des colonnes projet
+          statut: row.statut || row.Statut || "",
+          mise_en_exploitation: row.mise_en_exploitation || row['Mise en exploitation'] || "",
+          technologies: row.technologies || row.Technologies || "",
+          volume: row.volume || row.Volume || "",
+          lien: row.lien || row.Lien || ""
+        })).filter(p => !isNaN(p.lat) && !isNaN(p.lng)); // Exclut les projets sans coordonnées (annulés)
+      }
+    });
+
+    // Une fois les deux fichiers chargés et nettoyés, on initialise
+    initApp();
   } catch (error) {
-    console.error("Erreur de chargement du Sheet :", error);
+    console.error("Erreur de chargement des Sheets :", error);
   }
 }
 
-// 3. Fonction d'initialisation (regroupe tes fonctions existantes)
 function initApp() {
   buildFilters();
   renderMarkers();
 }
 
-// 4. Lancer le chargement au démarrage
 loadDataFromSheet();
 
 /* ═══════════════════════════════════════════════════════════════════════
-   CONFIGURATION DES RÔLES (ordre, couleur, libellé)
+   CONFIGURATION DES RÔLES ET COULEURS
 ═══════════════════════════════════════════════════════════════════════ */
 const ROLES = [
   { key: "Port",                               color: "#e0f2fe" },
@@ -533,17 +537,14 @@ const ROLES = [
   { key: "Construction & Réparation Navale",   color: "#fb923c" },
   { key: "Producteur d'acier",                 color: "#94a3b8" },
   { key: "Autres",                             color: "#e2e8f0" },
+  { key: "Projet",                             color: "#E74C3C" } // Le nouveau rôle exclusif
 ];
 
-/* Map rapide key → couleur */
 const ROLE_COLOR = {};
 ROLES.forEach(r => ROLE_COLOR[r.key] = r.color);
 
-/* ═══════════════════════════════════════════════════════════════════════
-   ÉTAT DE L'APPLICATION
-═══════════════════════════════════════════════════════════════════════ */
-let activeFilters = new Set(); // vide = tout afficher
-let markers = [];              // { actor, leafletMarker }
+let activeFilters = new Set(); 
+let markers = [];              
 
 /* ═══════════════════════════════════════════════════════════════════════
    INITIALISATION DE LA CARTE LEAFLET
@@ -555,63 +556,52 @@ const map = L.map('map', {
   attributionControl: true,
 });
 
-// Tuiles OpenStreetMap — thème sombre via CartoDB Dark Matter
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
   subdomains: 'abcd',
   maxZoom: 19
 }).addTo(map);
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GÉNÉRATION SVG DU MARQUEUR (camembert ou cercle plein)
+   GÉNÉRATION SVG DU MARQUEUR 
 ═══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Convertit des degrés polaires en coordonnées cartésiennes
- * autour du centre (cx, cy) avec rayon r.
- */
 function polarToXY(angleDeg, r, cx, cy) {
   const rad = (angleDeg - 90) * (Math.PI / 180);
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-/**
- * Génère le SVG du marqueur.
- * @param {string[]} roles   - rôles de l'acteur
- * @param {number}   size    - diamètre total du SVG (pixels)
- * @param {boolean}  stacked - true si cet emplacement a plusieurs acteurs
- * @param {number}   stackN  - nombre d'acteurs empilés (si stacked)
- */
 function buildMarkerSVG(roles, size, stacked, stackN) {
-  const r = size / 2 - 2;          // rayon du camembert
   const cx = size / 2;
   const cy = size / 2;
   const strokeW = 1.5;
-
   let piePaths = '';
+  let border = '';
 
-  if (roles.length === 1) {
-    // Cercle plein
-    piePaths = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${ROLE_COLOR[roles[0]] || '#7fa8cc'}" />`;
-  } else {
-    // Camembert : une tranche par rôle, proportions égales
-    const slice = 360 / roles.length;
-    roles.forEach((role, i) => {
-      const startAngle = i * slice;
-      const endAngle   = (i + 1) * slice;
-      const start = polarToXY(startAngle, r, cx, cy);
-      const end   = polarToXY(endAngle,   r, cx, cy);
-      const largeArc = slice > 180 ? 1 : 0;
-      const color = ROLE_COLOR[role] || '#7fa8cc';
-      piePaths += `
-        <path d="M${cx},${cy} L${start.x},${start.y} A${r},${r},0,${largeArc},1,${end.x},${end.y} Z"
-              fill="${color}" />`;
-    });
+  // CAS SPÉCIFIQUE : DESIGN PROJET
+  if (roles.includes("Projet")) {
+    const r = size / 2 - 1;
+    piePaths = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#E74C3C" fill-opacity="0.9" />`;
+    border = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="3,3" />`;
+  } 
+  // CAS STANDARD : CERCLE OU CAMEMBERT
+  else {
+    const r = size / 2 - 2;
+    if (roles.length === 1) {
+      piePaths = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${ROLE_COLOR[roles] || '#7fa8cc'}" />`;
+    } else {
+      const slice = 360 / roles.length;
+      roles.forEach((role, i) => {
+        const startAngle = i * slice;
+        const endAngle   = (i + 1) * slice;
+        const start = polarToXY(startAngle, r, cx, cy);
+        const end   = polarToXY(endAngle,   r, cx, cy);
+        const largeArc = slice > 180 ? 1 : 0;
+        const color = ROLE_COLOR[role] || '#7fa8cc';
+        piePaths += `<path d="M${cx},${cy} L${start.x},${start.y} A${r},${r},0,${largeArc},1,${end.x},${end.y} Z" fill="${color}" />`;
+      });
+    }
+    border = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="${strokeW}" />`;
   }
-
-  // Anneau de bordure
-  const border = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-    stroke="rgba(255,255,255,0.2)" stroke-width="${strokeW}" />`;
 
   // Badge "×N" si empilé
   let badge = '';
@@ -620,8 +610,7 @@ function buildMarkerSVG(roles, size, stacked, stackN) {
     const by = 6;
     badge = `
       <circle cx="${bx}" cy="${by}" r="8" fill="#0b1520" stroke="#2a4a6e" stroke-width="1"/>
-      <text x="${bx}" y="${by+3.5}" text-anchor="middle"
-            fill="#7fa8cc" font-size="7" font-family="Barlow Condensed" font-weight="700">×${stackN}</text>`;
+      <text x="${bx}" y="${by+3.5}" text-anchor="middle" fill="#7fa8cc" font-size="7" font-family="Barlow Condensed" font-weight="700">×${stackN}</text>`;
   }
 
   return `
@@ -639,61 +628,83 @@ function buildMarkerSVG(roles, size, stacked, stackN) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GÉNÉRATION DU CONTENU POPUP
+   CONSTRUCTION DE L'INFOBULLE (POPUP)
 ═══════════════════════════════════════════════════════════════════════ */
 function buildPopupHTML(actor) {
-  const tags = actor.roles.map(role => {
-    const color = ROLE_COLOR[role] || '#7fa8cc';
-    return `<span class="popup-role-tag">
-      <span class="popup-role-dot" style="background:${color};box-shadow:0 0 6px ${color}88"></span>
-      ${role}
-    </span>`;
-  }).join('');
-
-  return `
+  let html = `
     <div class="popup-inner">
       <div class="popup-country">${actor.pays}</div>
       <div class="popup-name">${actor.nom}</div>
-      <div class="popup-city">📍 ${actor.ville}</div>
-      <div class="popup-roles-title">Rôles (${actor.roles.length})</div>
-      <div>${tags}</div>
-    </div>`;
+      <div class="popup-city">📍 ${actor.ville || 'En mer'}</div>
+      <hr style="border:0; border-top:1px solid var(--border-light); margin-bottom:12px;">`;
+
+  // LOGIQUE SPÉCIFIQUE SI C'EST UN PROJET
+  if (actor.roles && actor.roles.includes("Projet")) {
+    html += `
+      <div style="font-size:12.5px; line-height:1.6; color:var(--text-secondary);">
+        <div><b style="color:var(--text-primary);">État actuel :</b> <span style="color: #E74C3C; font-weight: bold;">${actor.statut || 'Non renseigné'}</span></div>
+        <div><b style="color:var(--text-primary);">Mise en exploitation :</b> ${actor.mise_en_exploitation || 'Non définie'}</div>
+        <div><b style="color:var(--text-primary);">Technologies :</b> ${actor.technologies || 'Non renseigné'}</div>
+        <div><b style="color:var(--text-primary);">Capacité :</b> <strong style="color:var(--accent); font-size:14px;">${actor.volume || 'Non spécifié'}</strong></div>
+      </div>`;
+    
+    if (actor.lien) {
+      html += `
+        <div style="margin-top: 15px; text-align: center;">
+          <a href="${actor.lien}" target="_blank" style="display:inline-block; padding:6px 12px; background:rgba(0, 196, 255, 0.15); color:var(--accent); border: 1px solid var(--accent); border-radius:4px; text-decoration:none; font-size:12px; font-weight:600; transition: background 0.2s;">🔗 Voir le site du projet</a>
+        </div>`;
+    }
+  } 
+  // LOGIQUE POUR LES PORTS ET ACTEURS
+  else {
+    html += `<div class="popup-roles-title">Rôles de l'acteur</div><div>`;
+    actor.roles.forEach(r => {
+      const c = ROLE_COLOR[r] || '#7fa8cc';
+      html += `<span class="popup-role-tag"><span class="popup-role-dot" style="background:${c}"></span>${r}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  return html;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GROUPE D'ACTEURS PAR POSITION (pour gérer les superpositions)
+   REGROUPEMENT ET PLACEMENT DES MARQUEURS SUR LA CARTE
 ═══════════════════════════════════════════════════════════════════════ */
-function groupByPosition(actors) {
+const markerLayer = L.layerGroup().addTo(map);
+
+function groupByPosition(actorsList) {
   const groups = {};
-  actors.forEach(actor => {
-    // Clé arrondie pour regrouper les positions très proches
-    const key = `${actor.lat.toFixed(2)}_${actor.lng.toFixed(2)}`;
+  actorsList.forEach(a => {
+    if (isNaN(a.lat) || isNaN(a.lng)) return; 
+    const key = a.lat.toFixed(4) + '_' + a.lng.toFixed(4);
     if (!groups[key]) groups[key] = [];
-    groups[key].push(actor);
+    groups[key].push(a);
   });
   return groups;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   PLACEMENT DES MARQUEURS SUR LA CARTE
-═══════════════════════════════════════════════════════════════════════ */
-const markerLayer = L.layerGroup().addTo(map);
-
 function renderMarkers() {
-  // Nettoyer l'ancienne couche
   markerLayer.clearLayers();
   markers = [];
 
-  // Filtrer les acteurs selon les rôles actifs
-  const filtered = activeFilters.size === 0
+  // Filtrage indépendant des Acteurs
+  const filteredActors = activeFilters.size === 0
     ? ACTORS
     : ACTORS.filter(a => a.roles.some(r => activeFilters.has(r)));
 
-  // Mettre à jour le compteur
-  document.getElementById('visible-count').textContent = filtered.length;
+  // Filtrage indépendant des Projets
+  const filteredProjects = (activeFilters.size === 0 || activeFilters.has("Projet"))
+    ? PROJECTS
+    : [];
 
-  // Grouper par position géographique
-  const groups = groupByPosition(filtered);
+  // On combine les deux uniquement pour le dessin sur la carte
+  const elementsToRender = [...filteredActors, ...filteredProjects];
+
+  document.getElementById('visible-count').textContent = elementsToRender.length;
+
+  const groups = groupByPosition(elementsToRender);
 
   Object.values(groups).forEach(group => {
     const stackN = group.length;
@@ -701,8 +712,6 @@ function renderMarkers() {
     group.forEach((actor, idx) => {
       const SIZE = 32;
       const offset = stackN > 1 ? (idx - (stackN - 1) / 2) * 18 : 0;
-
-      // Décaler légèrement les marqueurs empilés
       const lat = actor.lat + (stackN > 1 ? idx * 0.004 - (stackN - 1) * 0.002 : 0);
       const lng = actor.lng;
 
@@ -735,9 +744,15 @@ function buildFilters() {
   container.innerHTML = '';
 
   ROLES.forEach(role => {
-    // Compter les acteurs ayant ce rôle
-    const count = ACTORS.filter(a => a.roles.includes(role.key)).length;
-    if (count === 0) return; // Ne pas afficher les rôles sans acteur
+    // Comptage adapté selon la source
+    let count = 0;
+    if (role.key === "Projet") {
+      count = PROJECTS.length;
+    } else {
+      count = ACTORS.filter(a => a.roles.includes(role.key)).length;
+    }
+
+    if (count === 0) return; 
 
     const item = document.createElement('div');
     item.className = 'filter-item';
@@ -765,7 +780,6 @@ function toggleFilter(roleKey, el) {
   renderMarkers();
 }
 
-/* Reset */
 document.getElementById('reset-btn').addEventListener('click', () => {
   activeFilters.clear();
   document.querySelectorAll('.filter-item').forEach(el => el.classList.remove('active'));
@@ -784,10 +798,6 @@ map.on('click', () => {
   const hint = document.getElementById('map-hint');
   if (hint) hint.style.opacity = '0';
 });
-
-/* ═══════════════════════════════════════════════════════════════════════
-   DÉMARRAGE
-═══════════════════════════════════════════════════════════════════════ */
 
 </script>
 </body>
