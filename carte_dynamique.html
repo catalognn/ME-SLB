@@ -459,7 +459,7 @@ let ACTORS = []; // La liste unique qui contiendra absolument tout
 /* ═══════════════════════════════════════════════════════════════════════
    RÉCUPÉRATION ET TRAITEMENT DES DEUX FICHIERS
 ═══════════════════════════════════════════════════════════════════════ */
-async function loadFromSheet() {
+async function loadDataFromSheet() {
   try {
     const [responseActeurs, responseProjets] = await Promise.all([
       fetch(SHEET_ACTEURS_URL),
