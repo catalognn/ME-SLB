@@ -493,17 +493,13 @@ async function loadDataFromSheet() {
         PROJECTS = results.data.map(row => ({
           nom: row.nom || row.Nom || "", 
           pays: row.pays || row.Pays || "",
-          ville: row.zone || row['Zone/Facade maritime'] || "En mer", // On utilise la "zone" pour l'affichage
+          ville: row.zone || row['zone'] || "En mer", // On utilise la "zone" pour l'affichage
           lat: parseFloat((row.lat || row.Latitude || "").toString().replace(',', '.')),
           lng: parseFloat((row.lng || row.Longitude || "").toString().replace(',', '.')),
-          roles: ["Projet"], // On force le rôle pour la classification
+          roles: ["projet"], // On force le rôle pour la classification
           
           // Récupération exclusive des colonnes projet
           statut: row.statut || row.Statut || "",
-          mise_en_exploitation: row.mise_en_exploitation || row['Mise en exploitation'] || "",
-          technologies: row.technologies || row.Technologies || "",
-          volume: row.volume || row.Volume || "",
-          lien: row.lien || row.Lien || ""
         })).filter(p => !isNaN(p.lat) && !isNaN(p.lng)); // Exclut les projets sans coordonnées (annulés)
       }
     });
@@ -537,7 +533,7 @@ const ROLES = [
   { key: "Construction & Réparation Navale",   color: "#fb923c" },
   { key: "Producteur d'acier",                 color: "#94a3b8" },
   { key: "Autres",                             color: "#e2e8f0" },
-  { key: "Projet",                             color: "#E74C3C" } // Le nouveau rôle exclusif
+  { key: "Projet",                             color: "#E74C3C" } 
 ];
 
 const ROLE_COLOR = {};
@@ -643,18 +639,10 @@ function buildPopupHTML(actor) {
     html += `
       <div style="font-size:12.5px; line-height:1.6; color:var(--text-secondary);">
         <div><b style="color:var(--text-primary);">État actuel :</b> <span style="color: #E74C3C; font-weight: bold;">${actor.statut || 'Non renseigné'}</span></div>
-        <div><b style="color:var(--text-primary);">Mise en exploitation :</b> ${actor.mise_en_exploitation || 'Non définie'}</div>
-        <div><b style="color:var(--text-primary);">Technologies :</b> ${actor.technologies || 'Non renseigné'}</div>
-        <div><b style="color:var(--text-primary);">Capacité :</b> <strong style="color:var(--accent); font-size:14px;">${actor.volume || 'Non spécifié'}</strong></div>
       </div>`;
     
-    if (actor.lien) {
-      html += `
-        <div style="margin-top: 15px; text-align: center;">
-          <a href="${actor.lien}" target="_blank" style="display:inline-block; padding:6px 12px; background:rgba(0, 196, 255, 0.15); color:var(--accent); border: 1px solid var(--accent); border-radius:4px; text-decoration:none; font-size:12px; font-weight:600; transition: background 0.2s;">🔗 Voir le site du projet</a>
-        </div>`;
-    }
   } 
+
   // LOGIQUE POUR LES PORTS ET ACTEURS
   else {
     html += `<div class="popup-roles-title">Rôles de l'acteur</div><div>`;
