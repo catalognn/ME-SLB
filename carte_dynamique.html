@@ -459,7 +459,7 @@ let ACTORS = []; // La liste unique qui contiendra absolument tout
 /* ═══════════════════════════════════════════════════════════════════════
    RÉCUPÉRATION ET TRAITEMENT DES DEUX FICHIERS
 ═══════════════════════════════════════════════════════════════════════ */
-async function loadDataFromSheet() {
+async function loadFromSheet() {
   try {
     const [responseActeurs, responseProjets] = await Promise.all([
       fetch(SHEET_ACTEURS_URL),
@@ -497,7 +497,7 @@ async function loadDataFromSheet() {
           ville: row.zone || "En mer", // On utilise la zone à la place de la ville
           lat: parseFloat((row.lat || row.Latitude || "").toString().replace(',', '.')),
           lng: parseFloat((row.lng || row.Longitude || "").toString().replace(',', '.')),
-          roles: ["Projet"], // 👈 C'est ce qui permet au filtre de fonctionner !
+          roles: row.roles, // 
           statut: row.statut || row.Statut || "",
           isProject: true // Étiquette pour identifier le type et gérer le statut dans l'infobulle
         })).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
